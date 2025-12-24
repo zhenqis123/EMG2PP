@@ -39,7 +39,10 @@ class _IkMaskView:
 
 @dataclass
 class Emg2PoseSessionData:
-    """Read-only interface to a single emg2pose session HDF5 file."""
+    """Read-only interface to a single emg2pose session HDF5 file.
+    对比 third_partys/PianoKPMNet/dataloader/dataset.py 里的 Emg2PoseDataset：
+    这里的数据来自结构化的 HDF5 (单 session)，而不是散落的 pkl 文件。
+    """
 
     HDF5_GROUP: ClassVar[str] = "emg2pose"
     TIMESERIES: ClassVar[str] = "timeseries"
@@ -128,7 +131,12 @@ class Emg2PoseSessionData:
 
 @dataclass
 class WindowedEmgDataset(torch.utils.data.Dataset):
-    """Iterates EMG windows with optional IK-failure filtering."""
+    """Iterates EMG windows with optional IK-failure filtering.
+    特点：
+      - 惰性从 HDF5 读取窗口（不在 __init__ 里提前切好所有窗口）。
+      - 支持 IK failure 掩码、NaN/Inf 清理、padding/jitter 等。
+      - 单 session 版本，多 session 用 multisession_emg2pose_dataset.MultiSessionWindowedEmgDataset.
+    """
 
     hdf5_path: Path
     window_length: InitVar[int | None] = 10_000
